@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8">
+
+<title>Hacking Parsers and Compilers in JavaScript</title>
+
+<meta name="description" content="">
+<meta name="author" content="Alex Sexton">
+
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<link rel="stylesheet" href="css/reveal.min.css">
+<link rel="stylesheet" href="css/theme/sky.css" id="theme">
+
+<!-- For syntax highlighting -->
+<link rel="stylesheet" href="lib/css/zenburn.css">
+
+<!-- If the query includes 'print-pdf', use the PDF print sheet -->
+<script>
+document.write( '<link rel="stylesheet" href="css/print/' + ( window.location.search.match( /print-pdf/gi ) ? 'pdf' : 'paper' ) + '.css" type="text/css" media="print">' );
+</script>
+
+<!--[if lt IE 9]>
+  <script src="lib/js/html5shiv.js"></script>
+<![endif]-->
+
+<style type="text/css">
+  /* quick overrides */
+.reveal h1, .reveal h2, .reveal h3, .reveal h4, .reveal h5, .reveal h6 {
+  text-transform: none;
+}
+.reveal h1 {
+  font-size: 2.4em;
+}
+.reveal pre {
+  font-size: 1em;
+  width: 121%;
+  margin-left: -10.5%;
+  padding: 10px;
+  background-color: rgba(0,0,0, 0.1);
+}
+.reveal pre code {
+  padding: 10px;
+  max-height: 700px;
+  /*-webkit-filter: invert(100%); BACK POCKET */
+}
+section[t] h1 {
+  font-size: 2.75em;
+  margin-bottom: 1em;
+}
+section[t] h2 {
+  letter-spacing: -2px;
+}
+section[t] blockquote {
+  border: 4px solid #CDC9C3;
+  border-radius: 10px;
+  background-color: #EFEFEF;
+  padding: 20px;
+}
+.reveal em {
+  color: #BADA55;
+  font-style: normal;
+  text-shadow: 1px 1px 0 #FFFFFF, 3px 3px 0 #000000;
+}
+.reveal iframe {
+  max-height: none;
+}
+.reveal img {
+  max-width: none;
+}
+.reveal section img {
+  border: none;
+  box-shadow: none;
+  background-color: transparent;
+}
+.reveal [data-small-code] pre {
+  font-size: 0.55em;
+}
+</style>
+</head>
+
+<body>
+
+<div class="reveal">
+
+  <!-- Any section element inside of this container is displayed as a slide -->
+  <div class="slides">
+
+    <section>
+      <h1>Hacking Parsers &amp; Compilers in JS</h1>
+      <h4>JSConf Brazil, June 22nd 2013</h4>
+      <p>
+      <small><a href="http://alexsexton.com">Alex Sexton</a> / <a href="http://twitter.com/slexaxton">@SlexAxton</a></small>
+      </p>
+    </section>
+
+<section data-markdown>
+<script type="text/template">
+## Me
+
+* Hacker at [Stripe](https://stripe.com)
+* Hate bulleted lists
+* jQuery Board of Advisors
+* Modernizr Core Team
+* Run TXJS
+</script>
+</section>
+
+
+<!-------START NORMAL SLIDES ----------->
+
+<section>
+<section data-markdown>
+<script type="text/template">
+# Hacking is
+
+### using something for a reason outside of its designated purpose
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# Hacking is
+
+### having a good time programming
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# Let's talk about **both**
+</script>
+<aside class="notes">
+We can't hack them until we understand how they work!
+</aside>
+</section>
+
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# Why?
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Sometimes **JavaScript**
+#### (or any language)
+### *isn't the right language* for what
+## you want to describe
+</script>
+</section>
+
+<section>
+
+<section data-markdown>
+<script type="text/template">
+# *Consider*
+## Templating Languages
+
+#### Because no one likes html strings in their JS
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# *Consider*
+## CoffeeScript
+
+#### Because fat arrows are so cool
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# *Consider*
+## Pluralization
+
+#### Because not everybody speaks english
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# *Consider*
+## SASS
+
+#### Because writing raw CSS is for chumps
+</script>
+</section>
+
+
+</section>
+
+<section>
+
+<section data-markdown>
+<script type="text/template">
+#### But let's go back and
+# *Consider*
+## Templating Languages
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## JavaScript *isn't* well suited for the problem
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## This Stinks :/
+
+```javascript
+var html = '<ul>';
+
+for(var i = 0; i < data.length; i++) {
+  html += '<li>' + data[i].name + '</li>';
+}
+
+html += '</ul>';
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## So sometimes we do HTML
+### plus some special characters
+
+```html
+<ul>
+  {{#each data}}
+  <li>{{name}}</li>
+  {{/each}}
+</ul>
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Or we can do a full HTML reworking
+
+```html
+ul
+  foreach($data)
+    li $name
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## They *aren't* HTML, but they *represent* HTML.
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Sometimes you'll see
+## this described as a
+# *DSL*
+### (Domain Specific Language)
+</script>
+</section>
+</section>
+
+<section>
+<section data-markdown>
+<script type="text/template">
+## HTML is also parsed
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### Luckily you don't have to
+## write your own
+## HTML Parser
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### The browser checks out the HTML
+### that you serve to it
+## and *turns it into an Object*
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### You probably know that Object as
+# *The DOM*
+</script>
+</section>
+</section>
+
+<section>
+<section data-markdown>
+<script type="text/template">
+### Let's say that we want to
+### generate our own
+## Document Object
+</script>
+<aside class="notes">
+We could specifically target the same structure that HTML has, so it's easy to cross compile
+</aside>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## **Lex** First
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## **Lexing** is
+### taking a **sequence of characters** and
+### turning them into a sequence of *tokens*
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## A **token**
+### is 1 or more characters that
+### represent a **single thing**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Some HTML Tokens are
+
+```
+LEFTBRACKET = <
+RIGHTBRACKET = >
+TAGNAME = [a-zA-Z]+
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## A **grammar**
+### is the set of rules for the order
+### and hierarchy of the tokens
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Part of the HTML Grammar might be
+
+```
+OPENTAG = (LEFTB) (TAGNAME) (ATTR)* (RIGHTB)
+CLOSETAG = (LEFTB) (SLASH) (TAGNAME) (RIGHTB)
+TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
+```
+</script>
+</section>
+</section>
+
+<section>
+<section data-markdown>
+<script type="text/template">
+### After we describe our grammar,
+### we *skip* learning how to write
+### the insides of a parser, and use a
+## **Parser Generator**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Most people use
+# **PEGjs** or **JISON**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# I use **PEGjs**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+# **PEG**
+### Stands for
+## **Parser Expression Grammar**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## These tools allow you to
+## generate an
+# **Abstract Syntax Tree**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### With similar rules to our tiny HTML
+### Grammar from before. This...
+
+```html
+<div><h1 class="foo">Hi!</h1></div>
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### ... becomes this!
+
+```html
+<div><h1 class="foo">Hi!</h1></div>
+```
+
+```js
+{ type: 'document',
+  children: [
+    { type: 'div',
+      children: [
+        { type: 'h1',
+          className: 'foo',
+          children: [
+            { type: 'textNode',
+              value: 'Hi!'
+            }
+]}]}]}
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## With CSS, it's the same!
+
+```css
+$blue: #3bbfce;
+```
+
+## first becomes **this**:
+
+```javascript
+[
+  { type: 'varstart' },
+  { type: 'string', value: 'blue' },
+  { type: 'equals' },
+  { type: 'string', value: '#3bbfce' },
+  { type: 'ruleender' }
+]
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## But then we add structure
+
+```javascript
+{
+  type: 'var-set',
+  left: {
+    type: 'var-name',
+    value: 'blue'
+  },
+  right: {
+    type: 'css-value',
+    value: '#3bbfce'
+  }
+}
+```
+</script>
+</section>
+
+</section>
+
+<section>
+<section data-markdown>
+<script type="text/template">
+# A **Compiler**
+## Takes in an AST
+## and poops out something
+## the browser can understand
+#### Typically HTML, CSS, or JS
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Something like Jade
+
+```
+div
+  h1(class=foo) Hi!
+```
+
+### Is parsed as the same HTML tree
+
+```js
+{ type: 'document',
+  children: [
+    { type: 'div',
+      children: [
+        { type: 'h1',
+          className: 'foo',
+          children: [
+            { type: 'textNode',
+              value: 'Hi!'
+            }
+]}]}]}
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+```
+div
+  h1(class=foo) Hi!
+```
+
+## Then compiled to HTML
+
+```html
+<div><h1 class="foo">Hi!</h1></div>
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### The compiler might look a little like this
+
+```javascript
+function toHTML(tree) {
+  // Base Case is just text
+  if (!tree.children) return tree.value;
+
+  // Otherwise, output a tag
+  return '<' + tree.type + 'class="' + tree.className + '">' +
+    // Render each child inside
+    tree.children.map(function(childTree){
+      return toHTML(childTree);
+    }).join('\n') +
+  // Output a closing tag
+  '<\/' + tree.type + '>';
+}
+```
+</script>
+</section>
+
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Why care if I don't need my own language?
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## You can make other people's
+## languages work better for you!
+</script>
+</section>
+
+<section>
+
+<section data-markdown>
+<script type="text/template">
+# require-handlebars-plugin
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## **Handlebars** is good at templating
+---
+## **Requirejs** is good at dependencies & builds
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### In handlebars we have to register our dependencies before we can execute our templates
+
+```js
+registerPartial('somePartial', function(){...});
+```
+
+### To use it in our template:
+
+```html
+<p>Hi. Here's a partial: {{> somePartial .}}</p>
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## That **sucks**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+  ## Handlebars isn't good at dependency management
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+  ## Let's fix that
+  #### (with require.js)
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## require-handlebars-plugin usage
+
+```js
+require(['hbs!template'], function( template ) {
+  console.log( template({data:1}) );
+});
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 1
+
+### Pull in the template as text
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 2
+
+### Parse (but don't compile) the template (into an AST)
+</script>
+<aside class="notes">
+It doesn't need the partials until it executes, really
+</aside>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 3
+
+### Recursively walk through the AST and look for `partial` nodes
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 4
+
+### Use the `partial` node `name` to map to other template files
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 5
+
+### Repeat steps 1-4 with the `partial` files until you don't see new partials
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 6
+
+### Compile the template (from the AST) and register it as a partial
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+### Each partial will now be registered prior to use during execution or compilation
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 7
+
+### Rejoice. No more manual `registerPartial` calls.
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Step 8
+
+### Do it all over again for `registerHelper`
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## In the end
+### require-handlebars-plugin will precompile it all automagically
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## With just a little AST walking
+### handlebars and require are back to doing what they do best.
+</script>
+</section>
+
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## **ASTs** can be very interesting
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+* count variables
+* change variables
+* move rules around
+* reduce duplicates
+* output statistics
+* add dynamic sections
+* output to other formats
+* and stuff
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## As long as the AST is valid
+## when you're done. It comes out
+## valid from the other end.
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+```javascript
+function importantize(data) {
+  // If we're a rule, add important
+  if (data.type == 'rule') {
+    data.value = data.value + '!important';
+  }
+  // Recursively importanize our children
+  data.children.forEach(function(child) {
+    importantize(child);
+  });
+  // Give it back
+  return data;
+}
+
+// do it!
+data1 = importanize(data1);
+```
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+```javascript
+function undo_intern_work(data) {
+  // Recursively go through rules
+  var children = data.children.map(function(child) {
+    // If it's a rule that contains 'important'
+    if (child.type == 'rule' &&
+        child.value.match(/important/)) {
+      // return null
+      return null;
+    }
+    else if (child.children) {
+      // Recurse
+      child = undo_intern_work(child);
+    }
+
+    return child;
+  });
+
+  // remove 'nulled' rules
+  data.children = children.compact();
+
+  // Give it back
+  return data;
+}
+
+// do it!
+data1 = importanize(data1);
+```
+
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## This works in every preprocessor.
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## **rework** is **made** do this.
+
+## [github.com/visionmedia/rework](https://github.com/visionmedia/rework)
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Let's go a **little** more
+# "real world"
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Compilation of styles is **fast** *
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## * until you hook it up to a `change` event.
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## In a theme builder, you might
+## want a **color picker** and a
+## **size slider** to update the styles
+## in *real time*.
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## How can you change
+## variable values
+## **without recompiling?**
+</script>
+</section>
+
+<section data-markdown>
+<script type="text/template">
+## Why a little extra dirty AST
+## Hacking, of course...
+
+#### (alex this is the demo, dont forget)
+</script>
+</section>
+
+
+
+<!-------END NORMAL SLIDES ----------->
+
+    <section>
+      <h1>Fin.</h1>
+      <h3>Questions?</h3>
+
+      <p>
+      <small><br> <a href="http://alexsexton.com/talks/hacking-parsers-and-compilers-in-js">http://alexsexton.com/talks/hacking-parsers-and-compilers-in-js</a></small>
+      </p>
+    </section>
+
+  </div>
+
+</div>
+
+<script src="lib/js/head.min.js"></script>
+<script src="js/reveal.min.js"></script>
+
+
+<script>
+
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+  controls: true,
+  progress: true,
+  history: true,
+  center: true,
+  width: 1024,
+
+  theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+  transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/fade/none
+
+  // Optional libraries used to extend on reveal.js
+  dependencies: [
+    { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+    { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+    { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+    { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+    { src: 'plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+    { src: 'plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+  ]
+});
+
+</script>
+
+</body>
+</html>
