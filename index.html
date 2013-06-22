@@ -243,6 +243,9 @@ html += '</ul>';
 </ul>
 ```
 </script>
+<aside class="notes">
+This is like handlebars. It's HTML++;
+</aside>
 </section>
 
 <section data-markdown>
@@ -255,6 +258,9 @@ ul
     li $name
 ```
 </script>
+<aside class="notes">
+This is kind of like Jade.
+</aside>
 </section>
 
 <section data-markdown>
@@ -294,6 +300,10 @@ ul
 ### that you serve to it
 ## and *turns it into an Object*
 </script>
+<aside class="notes">
+There are lots of people working very hard on this problem
+at Mozilla and Google. This is webkit and blink and gecko.
+</aside>
 </section>
 
 <section data-markdown>
@@ -301,6 +311,10 @@ ul
 ### You probably know that Object as
 # *The DOM*
 </script>
+<aside class="notes">
+The DOM comes with an API, but is really just a representation
+of the html document under the covers.
+</aside>
 </section>
 </section>
 
@@ -348,6 +362,9 @@ RIGHTBRACKET = >
 TAGNAME = [a-zA-Z]+
 ```
 </script>
+<aside class="notes">
+These are simplified (and there are *a lot* more).
+</aside>
 </section>
 
 <section data-markdown>
@@ -368,6 +385,9 @@ CLOSETAG = (LEFTB) (SLASH) (TAGNAME) (RIGHTB)
 TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
 ```
 </script>
+<aside class="notes">
+This is a simplified way of showing this stuff.
+</aside>
 </section>
 </section>
 
@@ -379,6 +399,10 @@ TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
 ### the insides of a parser, and use a
 ## **Parser Generator**
 </script>
+<aside class="notes">
+You should feel free to learn, but this would take a few talks
+on it's own.
+</aside>
 </section>
 
 <section data-markdown>
@@ -386,12 +410,18 @@ TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
 ## Most people use
 # **PEGjs** or **JISON**
 </script>
+<aside class="notes">
+These are both on github and both great.
+</aside>
 </section>
 
 <section data-markdown>
 <script type="text/template">
 # I use **PEGjs**
 </script>
+<aside class="notes">
+I tried both and PEGjs was easier to understand for my brain.
+</aside>
 </section>
 
 <section data-markdown>
@@ -408,6 +438,11 @@ TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
 ## generate an
 # **Abstract Syntax Tree**
 </script>
+<aside class="notes">
+Abstract just means there are no rules.<br/>
+Syntax means you're dealing with some language<br />
+Tree means you have to use recursion.
+</aside>
 </section>
 
 <section data-markdown>
@@ -416,7 +451,7 @@ TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
 ### Grammar from before. This...
 
 ```html
-<div><h1 class="foo">Hi!</h1></div>
+<div> <h1 class="foo">Hi!</h1> </div>
 ```
 </script>
 </section>
@@ -426,7 +461,7 @@ TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
 ### ... becomes this!
 
 ```html
-<div><h1 class="foo">Hi!</h1></div>
+<div> <h1 class="foo">Hi!</h1> </div>
 ```
 
 ```js
@@ -443,6 +478,9 @@ TAG = (OPENTAG) !(CLOSE TAG)* (CLOSETAG)
 ]}]}]}
 ```
 </script>
+<aside class="notes">
+Each object has a 'type' and then some children.
+</aside>
 </section>
 
 <section data-markdown>
@@ -465,6 +503,9 @@ $blue: #3bbfce;
 ]
 ```
 </script>
+<aside class="notes">
+This is like a variable in SASS.
+</aside>
 </section>
 
 <section data-markdown>
@@ -473,7 +514,7 @@ $blue: #3bbfce;
 
 ```javascript
 {
-  type: 'var-set',
+  type: 'var-declaration',
   left: {
     type: 'var-name',
     value: 'blue'
@@ -485,6 +526,9 @@ $blue: #3bbfce;
 }
 ```
 </script>
+<aside class="notes">
+This is the high-level view of the variable declaration.
+</aside>
 </section>
 
 </section>
@@ -525,6 +569,9 @@ div
 ]}]}]}
 ```
 </script>
+<aside class="notes">
+It represents the exact same data, just with a different syntax.
+</aside>
 </section>
 
 <section data-markdown>
@@ -568,7 +615,7 @@ function toHTML(tree) {
 
 <section data-markdown>
 <script type="text/template">
-## Why care if I don't need my own language?
+## Why care, if I don't need my own language?
 </script>
 </section>
 
@@ -577,6 +624,9 @@ function toHTML(tree) {
 ## You can make other people's
 ## languages work better for you!
 </script>
+<aside class="notes">
+You can mix and match things. And you can break things.
+</aside>
 </section>
 
 <section>
@@ -615,6 +665,9 @@ registerPartial('somePartial', function(){...});
 <script type="text/template">
 ## That **sucks**
 </script>
+<aside class="notes">
+It would be nice if it would just find the partials for us.
+</aside>
 </section>
 
 <section data-markdown>
@@ -818,6 +871,9 @@ data1 = importanize(data1);
 <script type="text/template">
 ## This works in every preprocessor.
 </script>
+<aside class="notes">
+Naturally, the syntax and way you do this changes between each.
+</aside>
 </section>
 
 <section data-markdown>
